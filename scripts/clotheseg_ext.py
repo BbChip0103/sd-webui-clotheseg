@@ -91,7 +91,7 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
     else:
         include_mask_list = []
     
-    include_mask = np.zeros_like(original_input_image, dtype=np.uint8)
+    include_mask = np.zeros(original_input_image.shape[:2], dtype=np.uint8)
     for each_mask in include_mask_list:
         include_mask = np.bitwise_or(include_mask, each_mask.astype(np.uint8))
         
@@ -102,10 +102,10 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
     print('???')
     print(merged_mask.shape)
     print('???')
-    # merged_mask = np.tile(
-    #     merged_mask, 
-    #     reps=3
-    # )
+    merged_mask = np.tile(
+        merged_mask, 
+        reps=3
+    )
 
     masked_image = None
     merged_mask_temp = (merged_mask == 255)
