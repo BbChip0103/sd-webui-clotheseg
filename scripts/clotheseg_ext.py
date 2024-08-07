@@ -73,20 +73,23 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
     ]
     images = np.stack(images)
 
-    human_parsing_results = seg_model.parse(
-        images=images, 
-    )
-    human_parsing_results = human_parsing_results[0]
+    if seg_model
+        human_parsing_results = seg_model.parse(
+            images=images, 
+        )
+        human_parsing_results = human_parsing_results[0]
 
 
-    include_mask_list = []
-    label = schp.model.dataset_settings[dataset_type]['label']
-    for included_part in included_parts:
-        if included_part in label:
-            part_i = label.index(included_part)
-            if part_i >= 0:
-                include_mask = (human_parsing_results==part_i)
-                include_mask_list.append(include_mask)
+        include_mask_list = []
+        label = schp.model.dataset_settings[dataset_type]['label']
+        for included_part in included_parts:
+            if included_part in label:
+                part_i = label.index(included_part)
+                if part_i >= 0:
+                    include_mask = (human_parsing_results==part_i)
+                    include_mask_list.append(include_mask)
+    else:
+        include_mask_list = []
     
     include_mask = np.zeros_like(original_input_image, dtype=np.uint8)
     for each_mask in include_mask_list:
@@ -96,10 +99,13 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
 
     merged_mask = merged_mask.astype(np.uint8)
     merged_mask *= 255
-    merged_mask = np.tile(
-        merged_mask, 
-        reps=3
-    )
+    print('???')
+    print(merged_mask.shape)
+    print('???')
+    # merged_mask = np.tile(
+    #     merged_mask, 
+    #     reps=3
+    # )
 
     masked_image = None
     merged_mask_temp = (merged_mask == 255)
