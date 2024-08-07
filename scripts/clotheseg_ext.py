@@ -24,9 +24,11 @@ import schp
 
 
 # det_model = None
-seg_model = None
+# seg_model = None
 # seg_model_2 = None
 # lndmrk_model = None
+global dataset_type = None
+global seg_model = None
 
 model_dir = os.path.join('models', 'clotheseg')
 
@@ -40,9 +42,6 @@ part_label_list = sorted(list(set(part_label_list)))
 
 
 def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type_='pil'):
-    global dataset_type
-    global seg_model
-
     if model == 'SCHP (lip)':
         if dataset_type != 'lip':
             dataset_type = 'lip'
