@@ -111,6 +111,10 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
     return [masked_image, merged_mask]
 
 
+def unload_model(type_):
+    return True
+
+
 def add_tab():
     device = devices.get_optimal_device()
     vram_total = torch.cuda.get_device_properties(device).total_memory
