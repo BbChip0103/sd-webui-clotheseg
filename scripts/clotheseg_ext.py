@@ -27,8 +27,8 @@ import schp
 # seg_model = None
 # seg_model_2 = None
 # lndmrk_model = None
-global dataset_type = None
-global seg_model = None
+dataset_type = None
+seg_model = None
 
 model_dir = os.path.join('models', 'clotheseg')
 
