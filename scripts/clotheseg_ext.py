@@ -42,6 +42,9 @@ part_label_list = sorted(list(set(part_label_list)))
 
 
 def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type_='pil'):
+    global dataset_type
+    global seg_model
+
     if model == 'SCHP (lip)':
         if dataset_type != 'lip':
             dataset_type = 'lip'
