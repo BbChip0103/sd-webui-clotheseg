@@ -73,7 +73,7 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
     ]
     images = np.stack(images)
 
-    if seg_model
+    if seg_model:
         human_parsing_results = seg_model.parse(
             images=images, 
         )
