@@ -97,9 +97,11 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
         
     merged_mask = include_mask
 
+    merged_mask = merged_mask[..., np.newaxis]
     merged_mask = merged_mask.astype(np.uint8)
     merged_mask *= 255
     print('???')
+    print(original_input_image.shape)
     print(merged_mask.shape)
     print('???')
     merged_mask = np.tile(
