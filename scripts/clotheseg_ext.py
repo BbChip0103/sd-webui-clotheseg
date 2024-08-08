@@ -125,6 +125,83 @@ def unload_model(type_):
     return True
 
 
+def base64_to_RGB(base64_string):
+    imgdata = base64.b64decode(str(base64_string))
+    img = Image.open(io.BytesIO(imgdata))
+    opencv_img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+    return opencv_img 
+
+def encode_np_to_base64(img):
+    pil = Image.fromarray(img)
+    return api.encode_pil_to_base64(pil)
+
+def RGB_to_base64(img):
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    return encode_np_to_base64(img) 
+
+def mount_api(_: gr.Blocks, app: FastAPI):
+    @app.get(
+        "/clothesg/models",
+        summary="Get model type strs",
+        description="Currnetly we support 'SCHP (lip)', 'SCHP (atr)', 'SCHP (pascal)'",
+    )
+    async def get_models():
+        return ['SCHP (lip)', 'SCHP (atr)', 'SCHP (pascal)']
+
+    @app.get(
+        "/clothesg/labels",
+        summary="Get segmentation part strs",
+        description="Valid part strings for /clothesg/img2mask",
+    )
+    async def get_labels(model: str):
+        if model == 'SCHP (lip)':
+            labels = schp.model.dataset_settings['lip']['label']
+        elif model == 'SCHP (atr)':
+            labels = schp.model.dataset_settings['atr']['label']
+        elif model == 'SCHP (pascal)':
+            labels = schp.model.dataset_settings['pascal']['label']
+        else:
+            labels = []
+
+        return labels
+
+    class Img2MaskItem(BaseModel):
+        img: str
+        include_parts: list[str]
+        # exclude_parts: Optional[list[str]] = []
+        dilate_percent: Optional[int] = 0
+        # want_one_big_face: bool = False
+
+    @app.post(
+        "/clothesg/img2mask",
+        summary="Get segmentation mask",
+        description="Get segmentation mask from clothes image",
+    )
+    async def img2mask(item:Img2MaskItem):
+        """
+        - **img**: A portrait image to generate binary mask.
+        - **mdoel**: Segmentation model you want to use.
+        - **include_parts**: Parts you need to include.
+        - **dilate_percent (Optional)**: Dilation percentage you need to applied.
+        """
+        img = base64_to_RGB(item.img)
+
+        masked_image, merged_mask = image_to_mask(
+            img, 
+            model=item.model, 
+            included_parts=item.included_parts, 
+            face_dilation_percentage=item.dilate_percent, 
+            type_='numpy',
+        )
+
+        result_dict= {
+            'masked_image': RGB_to_base64(masked_image), 
+            'mask': RGB_to_base64(merged_mask)
+        }
+
+        return result_dict
+
+
 def add_tab():
     device = devices.get_optimal_device()
     vram_total = torch.cuda.get_device_properties(device).total_memory
@@ -159,5 +236,5 @@ def single_tab():
     unload_button.click(unload_model)
 
 
-# script_callbacks.on_app_started(mount_facer_api)
+# script_callbacks.on_app_started(mount_api)
 script_callbacks.on_ui_tabs(add_tab)
