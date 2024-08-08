@@ -17,8 +17,8 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from modules import devices, lowvram, script_callbacks, shared
 from modules.api import api
-# from typing import Optional, Set
-# from pydantic import BaseModel
+from typing import Optional, Set
+from pydantic import BaseModel
 
 import schp
 
