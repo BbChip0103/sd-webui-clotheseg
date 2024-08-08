@@ -125,6 +125,40 @@ def unload_model(type_):
     return True
 
 
+def add_tab():
+    device = devices.get_optimal_device()
+    vram_total = torch.cuda.get_device_properties(device).total_memory
+    if vram_total <= 12*1024*1024*1024:
+        low_vram = True
+
+    with gr.Blocks(analytics_enabled=False) as ui:
+        with gr.Tab("Single"):
+            single_tab()
+
+    return [(ui, "Clotheseg", "Clothes Segmentation")]
+
+
+def single_tab():
+    with gr.Row():
+        with gr.Column():
+            image = gr.Image(type='numpy', label="Image")
+        with gr.Column():
+            # mask = gr.Image(type='numpy', label="Mask")
+            results = gr.Gallery(label="Results").style(grid=2)
+            # label_results = gr.Textbox(label="label results", lines=3)
+    with gr.Row():
+        model = gr.Dropdown(label="Segmentation model", choices=model_list, value="None")
+        return_mask = gr.Checkbox(label="Return mask", value=False)
+        included_parts = gr.CheckboxGroup(part_label_list, label="Included parts")
+        # excluded_parts = gr.CheckboxGroup(part_label_list, label='Excluded parts')
+        dilation_percentage = gr.Slider(0, 100, value=0, label="dilation size (%)")
+    with gr.Row():
+        button = gr.Button("Generate", variant='primary')
+        unload_button = gr.Button("Model unload")
+    button.click(image_to_mask, inputs=[image, model, included_parts, dilation_percentage], outputs=results)
+    unload_button.click(unload_model)
+
+
 def base64_to_RGB(base64_string):
     imgdata = base64.b64decode(str(base64_string))
     img = Image.open(io.BytesIO(imgdata))
@@ -202,39 +236,5 @@ def mount_api(_: gr.Blocks, app: FastAPI):
         return result_dict
 
 
-def add_tab():
-    device = devices.get_optimal_device()
-    vram_total = torch.cuda.get_device_properties(device).total_memory
-    if vram_total <= 12*1024*1024*1024:
-        low_vram = True
-
-    with gr.Blocks(analytics_enabled=False) as ui:
-        with gr.Tab("Single"):
-            single_tab()
-
-    return [(ui, "Clotheseg", "Clothes Segmentation")]
-
-
-def single_tab():
-    with gr.Row():
-        with gr.Column():
-            image = gr.Image(type='numpy', label="Image")
-        with gr.Column():
-            # mask = gr.Image(type='numpy', label="Mask")
-            results = gr.Gallery(label="Results").style(grid=2)
-            # label_results = gr.Textbox(label="label results", lines=3)
-    with gr.Row():
-        model = gr.Dropdown(label="Segmentation model", choices=model_list, value="None")
-        return_mask = gr.Checkbox(label="Return mask", value=False)
-        included_parts = gr.CheckboxGroup(part_label_list, label="Included parts")
-        # excluded_parts = gr.CheckboxGroup(part_label_list, label='Excluded parts')
-        dilation_percentage = gr.Slider(0, 100, value=0, label="dilation size (%)")
-    with gr.Row():
-        button = gr.Button("Generate", variant='primary')
-        unload_button = gr.Button("Model unload")
-    button.click(image_to_mask, inputs=[image, model, included_parts, dilation_percentage], outputs=results)
-    unload_button.click(unload_model)
-
-
-# script_callbacks.on_app_started(mount_api)
 script_callbacks.on_ui_tabs(add_tab)
+script_callbacks.on_app_started(mount_api)
