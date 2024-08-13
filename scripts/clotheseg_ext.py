@@ -123,12 +123,9 @@ def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pi
     for each_mask in include_mask_list:
         include_mask = np.bitwise_or(include_mask, each_mask.astype(np.uint8))
     
+    include_mask *= 255
     if dilation_percentage > 0:
         bboxes = mask_to_bbox(include_mask)
-        print(include_mask.dtype)
-        print(include_mask.sum())
-        print(include_mask.shape)
-        print(bboxes)
         if bboxes:
             bbox = sorted(bboxes, key=lambda x: (x[2]-x[0])*(x[3]-x[1]),reverse=True)[0] # largest_bbox
             fileter_size_w = int((bbox[2]-bbox[0]) * dilation_percentage/100)
@@ -141,7 +138,6 @@ def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pi
 
     merged_mask = merged_mask[..., np.newaxis]
     merged_mask = merged_mask.astype(np.uint8)
-    merged_mask *= 255
     merged_mask = np.tile(
         merged_mask, 
         reps=3
