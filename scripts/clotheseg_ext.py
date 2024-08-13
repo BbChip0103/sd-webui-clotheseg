@@ -69,7 +69,7 @@ def mask_to_bbox(mask):
     return bboxes
 
 
-def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pil'):
+def image_to_mask(image, model, included_parts, erode_percentage=0, dilation_percentage=0, type_='pil'):
     global dataset_type
     global seg_model
 
@@ -124,20 +124,27 @@ def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pi
         include_mask = np.bitwise_or(include_mask, each_mask.astype(np.uint8))
     
     include_mask *= 255
-    if dilation_percentage > 0:
+    if erode_percentage > 0 or dilation_percentage > 0:
         bboxes = mask_to_bbox(include_mask)
         if bboxes:
             bbox = sorted(bboxes, key=lambda x: (x[2]-x[0])*(x[3]-x[1]),reverse=True)[0] # largest_bbox
-            fileter_size_w = int((bbox[2]-bbox[0]) * dilation_percentage/100)
-            fileter_size_h = int((bbox[3]-bbox[1]) * dilation_percentage/100)
-            if fileter_size_w > 1 and fileter_size_h > 1:
-                kernel = np.ones((fileter_size_h, fileter_size_w), np.uint8)
-                include_mask = cv2.dilate(include_mask, kernel, iterations=1)
+            if erode_percentage > 0:
+                fileter_size_w = int((bbox[2]-bbox[0]) * erode_percentage/100)
+                fileter_size_h = int((bbox[3]-bbox[1]) * erode_percentage/100)
+                if fileter_size_w > 1 and fileter_size_h > 1:
+                    kernel = np.ones((fileter_size_h, fileter_size_w), np.uint8)
+                    include_mask = cv2.erode(include_mask, kernel, iterations=1)
+
+            if dilation_percentage > 0:
+                fileter_size_w = int((bbox[2]-bbox[0]) * dilation_percentage/100)
+                fileter_size_h = int((bbox[3]-bbox[1]) * dilation_percentage/100)
+                if fileter_size_w > 1 and fileter_size_h > 1:
+                    kernel = np.ones((fileter_size_h, fileter_size_w), np.uint8)
+                    include_mask = cv2.dilate(include_mask, kernel, iterations=1)
 
     merged_mask = include_mask
 
     merged_mask = merged_mask[..., np.newaxis]
-    merged_mask = merged_mask.astype(np.uint8)
     merged_mask = np.tile(
         merged_mask, 
         reps=3
@@ -185,11 +192,16 @@ def single_tab():
         return_mask = gr.Checkbox(label="Return mask", value=False)
         included_parts = gr.CheckboxGroup(part_label_list, label="Included parts")
         # excluded_parts = gr.CheckboxGroup(part_label_list, label='Excluded parts')
+        erode_percentage = gr.Slider(0, 100, value=0, label="erode size (%)")
         dilation_percentage = gr.Slider(0, 100, value=0, label="dilation size (%)")
     with gr.Row():
         button = gr.Button("Generate", variant='primary')
         unload_button = gr.Button("Model unload")
-    button.click(image_to_mask, inputs=[image, model, included_parts, dilation_percentage], outputs=results)
+    button.click(
+        image_to_mask, 
+        inputs=[image, model, included_parts, erode_percentage, dilation_percentage], 
+        outputs=results
+    )
     unload_button.click(unload_model)
 
 
@@ -238,6 +250,7 @@ def mount_api(_: gr.Blocks, app: FastAPI):
         model: str
         include_parts: list[str]
         # exclude_parts: Optional[list[str]] = []
+        erode_percent_percent: Optional[int] = 0
         dilate_percent: Optional[int] = 0
         # want_one_big_face: bool = False
 
@@ -259,6 +272,7 @@ def mount_api(_: gr.Blocks, app: FastAPI):
             img, 
             model=item.model, 
             included_parts=item.included_parts, 
+            erode_percentage=item.erode_percent, 
             dilation_percentage=item.dilate_percent, 
             type_='numpy',
         )
