@@ -125,6 +125,8 @@ def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pi
     
     if dilation_percentage > 0:
         bboxes = mask_to_bbox(include_mask)
+        print(include_mask.dtype)
+        print(include_mask.sum())
         print(include_mask.shape)
         print(bboxes)
         if bboxes:
