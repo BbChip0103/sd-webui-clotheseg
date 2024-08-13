@@ -125,6 +125,7 @@ def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pi
     
     if dilation_percentage > 0:
         bboxes = mask_to_bbox(include_mask)
+        print(bboxes)
         if bboxes:
             bbox = sorted(bboxes, key=lambda x: (x[2]-x[0])*(x[3]-x[1]),reverse=True)[0] # largest_bbox
             fileter_size_w = int((bbox[2]-bbox[0]) * dilation_percentage/100)
