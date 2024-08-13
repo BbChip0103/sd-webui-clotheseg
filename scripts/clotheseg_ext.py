@@ -1,13 +1,12 @@
 import numpy as np
 import os
 import os.path as pth
-# import facer
 import cv2
 from PIL import Image
 import torch
 import io
-
-# from src.face_landmark_detector import face_aligner
+from skimage.measure import label, regionprops, find_contours
+import schp
 
 import csv
 import gradio as gr
@@ -19,8 +18,6 @@ from modules import devices, lowvram, script_callbacks, shared
 from modules.api import api
 from typing import Optional, Set
 from pydantic import BaseModel
-
-import schp
 
 
 # det_model = None
@@ -39,6 +36,37 @@ part_label_list += schp.model.dataset_settings['atr']['label']
 part_label_list += schp.model.dataset_settings['lip']['label']
 part_label_list += schp.model.dataset_settings['pascal']['label']
 part_label_list = sorted(list(set(part_label_list)))
+
+
+def mask_to_border(mask):
+    h, w = mask.shape
+    border = np.zeros((h, w))
+
+    contours = find_contours(mask, 128)
+    for contour in contours:
+        for c in contour:
+            x = int(c[0])
+            y = int(c[1])
+            border[x][y] = 255
+
+    return border
+
+def mask_to_bbox(mask):
+    bboxes = []
+
+    mask = mask_to_border(mask)
+    lbl = label(mask)
+    props = regionprops(lbl)
+    for prop in props:
+        x1 = prop.bbox[1]
+        y1 = prop.bbox[0]
+
+        x2 = prop.bbox[3]
+        y2 = prop.bbox[2]
+
+        bboxes.append([x1, y1, x2, y2])
+
+    return bboxes
 
 
 def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type_='pil'):
@@ -94,16 +122,21 @@ def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type
     include_mask = np.zeros(original_input_image.shape[:2], dtype=np.uint8)
     for each_mask in include_mask_list:
         include_mask = np.bitwise_or(include_mask, each_mask.astype(np.uint8))
-        
+    
+    if dilation_percentage > 0:
+        bboxes = mask_to_bbox(y)
+        bbox = sorted(bboxes, key=lambda x: (x[2]-x[0])*(x[3]-x[1]),reverse=True)[0] # largest_bbox
+        fileter_size_w = int((bbox[2]-bbox[0]) * dilation_percentage/100)
+        fileter_size_h = int((bbox[3]-bbox[1]) * dilation_percentage/100)
+        if fileter_size_w > 1 and fileter_size_h > 1:
+            kernel = np.ones((fileter_size_h, fileter_size_w), np.uint8)
+            include_mask = cv2.dilate(include_mask, kernel, iterations=1)
+
     merged_mask = include_mask
 
     merged_mask = merged_mask[..., np.newaxis]
     merged_mask = merged_mask.astype(np.uint8)
     merged_mask *= 255
-    print('???')
-    print(original_input_image.shape)
-    print(merged_mask.shape)
-    print('???')
     merged_mask = np.tile(
         merged_mask, 
         reps=3
