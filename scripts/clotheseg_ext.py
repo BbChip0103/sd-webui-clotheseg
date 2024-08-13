@@ -69,7 +69,7 @@ def mask_to_bbox(mask):
     return bboxes
 
 
-def image_to_mask(image, model, included_parts, face_dilation_percentage=0, type_='pil'):
+def image_to_mask(image, model, included_parts, dilation_percentage=0, type_='pil'):
     global dataset_type
     global seg_model
 
@@ -258,7 +258,7 @@ def mount_api(_: gr.Blocks, app: FastAPI):
             img, 
             model=item.model, 
             included_parts=item.included_parts, 
-            face_dilation_percentage=item.dilate_percent, 
+            dilation_percentage=item.dilate_percent, 
             type_='numpy',
         )
 
