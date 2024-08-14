@@ -211,13 +211,9 @@ def base64_to_img(base64_string):
     img = np.array(img)
     return img 
 
-def encode_np_to_base64(img):
+def img_to_base64(img):
     pil = Image.fromarray(img)
     return api.encode_pil_to_base64(pil)
-
-def img_to_base64(img):
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    return encode_np_to_base64(img)
 
 def mount_api(_: gr.Blocks, app: FastAPI):
     @app.get(
