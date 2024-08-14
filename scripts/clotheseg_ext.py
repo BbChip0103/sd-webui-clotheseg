@@ -208,6 +208,7 @@ def single_tab():
 def base64_to_img(base64_string):
     imgdata = base64.b64decode(str(base64_string))
     img = Image.open(io.BytesIO(imgdata))
+    img = np.array(img)
     return img 
 
 def encode_np_to_base64(img):
