@@ -205,19 +205,18 @@ def single_tab():
     unload_button.click(unload_model)
 
 
-def base64_to_RGB(base64_string):
+def base64_to_img(base64_string):
     imgdata = base64.b64decode(str(base64_string))
     img = Image.open(io.BytesIO(imgdata))
-    opencv_img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
-    return opencv_img 
+    return img 
 
 def encode_np_to_base64(img):
     pil = Image.fromarray(img)
     return api.encode_pil_to_base64(pil)
 
-def RGB_to_base64(img):
+def img_to_base64(img):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    return encode_np_to_base64(img) 
+    return encode_np_to_base64(img)
 
 def mount_api(_: gr.Blocks, app: FastAPI):
     @app.get(
@@ -266,7 +265,7 @@ def mount_api(_: gr.Blocks, app: FastAPI):
         - **include_parts**: Parts you need to include.
         - **dilate_percent (Optional)**: Dilation percentage you need to applied.
         """
-        img = base64_to_RGB(item.img)
+        img = base64_to_img(item.img)
 
         masked_image, merged_mask = image_to_mask(
             img, 
@@ -278,8 +277,8 @@ def mount_api(_: gr.Blocks, app: FastAPI):
         )
 
         result_dict= {
-            'masked_image': RGB_to_base64(masked_image), 
-            'mask': RGB_to_base64(merged_mask)
+            'masked_image': img_to_base64(masked_image), 
+            'mask': img_to_base64(merged_mask)
         }
 
         return result_dict
