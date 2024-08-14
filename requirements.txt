@@ -7,3 +7,4 @@ torchvision
 torchaudio
 gdown
 schp
+scikit-image

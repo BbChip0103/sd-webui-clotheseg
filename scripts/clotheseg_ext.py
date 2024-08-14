@@ -248,7 +248,7 @@ def mount_api(_: gr.Blocks, app: FastAPI):
     class Img2MaskItem(BaseModel):
         img: str
         model: str
-        include_parts: list[str]
+        included_parts: list[str]
         # exclude_parts: Optional[list[str]] = []
         erode_percent_percent: Optional[int] = 0
         dilate_percent: Optional[int] = 0
