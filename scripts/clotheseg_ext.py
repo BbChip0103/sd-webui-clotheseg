@@ -250,8 +250,8 @@ def mount_api(_: gr.Blocks, app: FastAPI):
         model: str
         included_parts: list[str]
         # exclude_parts: Optional[list[str]] = []
-        erode_percent_percent: Optional[int] = 0
-        dilate_percent: Optional[int] = 0
+        erode_percentage: Optional[int] = 0
+        dilate_percentage: Optional[int] = 0
         # want_one_big_face: bool = False
 
     @app.post(
@@ -272,8 +272,8 @@ def mount_api(_: gr.Blocks, app: FastAPI):
             img, 
             model=item.model, 
             included_parts=item.included_parts, 
-            erode_percentage=item.erode_percent, 
-            dilation_percentage=item.dilate_percent, 
+            erode_percentage=item.erode_percentage, 
+            dilation_percentage=item.dilation_percentage, 
             type_='numpy',
         )
 
