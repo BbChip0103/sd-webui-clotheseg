@@ -205,15 +205,27 @@ def single_tab():
     unload_button.click(unload_model)
 
 
+def remove_transparency(img, bg_colour=(255, 255, 255)):
+    if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+        alpha = img.convert('RGBA').split()[-1]
+        bg = Image.new("RGB", img.size, bg_colour + (255,))
+        bg.paste(img, mask=alpha)
+        return bg
+
+    else:
+        return img
+
 def base64_to_img(base64_string):
     imgdata = base64.b64decode(str(base64_string))
     img = Image.open(io.BytesIO(imgdata))
+    img = remove_transparency(img)
     img = np.array(img)
     return img 
 
 def img_to_base64(img):
     pil = Image.fromarray(img)
     return api.encode_pil_to_base64(pil)
+
 
 def mount_api(_: gr.Blocks, app: FastAPI):
     @app.get(
